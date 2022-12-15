@@ -1,1 +1,7 @@
+# venv
 /venv/
+
+# django
+__pycache__
+__init__.py
+*.sqlite3
