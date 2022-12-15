@@ -3,5 +3,6 @@
 
 # django
 __pycache__
+migrations
 __init__.py
 *.sqlite3
