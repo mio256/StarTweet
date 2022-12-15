@@ -8,11 +8,20 @@ Twitter application that pursues simplicity and efficiency
 
 ## Requirement
 
+[requirements.txt](./requirements.txt)
+
 ## Usage
+
+```sh
+$ sh setup.sh
+```
 
 ## Features
 
 ## Reference
+
+[django](https://www.djangoproject.com/)
+
 
 ## Author
 
