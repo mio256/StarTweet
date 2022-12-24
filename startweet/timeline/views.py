@@ -33,6 +33,11 @@ class IndexView(TemplateView):
             return redirect('timeline:login')
         return super().get(request, *args, **kwargs)
 
+    def post(self, request, *args, **kwargs):
+        content = request.POST['content']
+        create_client(request.session['access_token'],request.session['access_token_secret']).create_tweet(text=content)
+        return super().get(request, *args, **kwargs)
+
 
 def login(request):
     API_KEY = os.environ['CONSUMER_KEY']
