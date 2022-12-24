@@ -1,1 +1,3 @@
 django
+tweepy
+requests_oauthlib
