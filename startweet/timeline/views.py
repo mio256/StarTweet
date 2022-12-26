@@ -4,13 +4,11 @@ import tweepy
 import requests
 import requests_oauthlib
 from django.shortcuts import redirect
-from django.http import HttpResponse, JsonResponse
-from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import TemplateView
 
 
 def create_client(access_token: str, access_token_secret: str):
-    client = tweepy.Client(
+    return tweepy.Client(
         os.environ['BEARER_TOKEN'],
         os.environ['CONSUMER_KEY'],
         os.environ['CONSUMER_SECRET'],
@@ -18,8 +16,6 @@ def create_client(access_token: str, access_token_secret: str):
         access_token_secret,
         return_type=requests.Response
     )
-
-    return client
 
 
 class IndexView(TemplateView):
@@ -35,7 +31,7 @@ class IndexView(TemplateView):
             exclude=['retweets', 'replies'],
             tweet_fields=['created_at', 'author_id', 'public_metrics'],
             expansions=['author_id', 'attachments.media_keys'],
-            user_fields=['name', 'username', 'profile_image_url', 'url'],
+            user_fields=['name', 'profile_image_url'],
             media_fields=['url'],
             max_results=100,
             start_time=datetime.datetime.now() - datetime.timedelta(days=1)
@@ -43,6 +39,12 @@ class IndexView(TemplateView):
             try:
                 home = home.json()
                 for tweet in home['data']:
+                    if 'attachments' in tweet:
+                        tweet['media_url'] = []
+                        for media_key in tweet['attachments']['media_keys']:
+                            for media in home['includes']['media']:
+                                if media_key == media['media_key'] and 'url' in media:
+                                    tweet['media_url'].append(media['url'])
                     for user in home['includes']['users']:
                         if user['id'] == tweet['author_id']:
                             tweet['name'] = user['name']
@@ -62,7 +64,7 @@ class IndexView(TemplateView):
 
     def post(self, request, *args, **kwargs):
         content = request.POST['content']
-        create_client(request.session['access_token'],request.session['access_token_secret']).create_tweet(text=content)
+        create_client(request.session['access_token'], request.session['access_token_secret']).create_tweet(text=content)
         return super().get(request, *args, **kwargs)
 
 

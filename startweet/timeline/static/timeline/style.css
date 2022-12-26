@@ -1,0 +1,9 @@
+.tweet_media {
+    display: inline-block;
+    height: 100px;
+    margin-right: 15px;
+    margin-bottom: 15px;
+}
+.tweet_media img {
+    height: 100%;
+}

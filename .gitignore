@@ -7,3 +7,6 @@ migrations
 __init__.py
 *.sqlite3
 startweet/static/
+
+# test
+test/
