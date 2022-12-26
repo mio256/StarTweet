@@ -1,4 +1,5 @@
 import os
+import datetime
 import tweepy
 import requests
 import requests_oauthlib
@@ -26,6 +27,32 @@ class IndexView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+
+        client = create_client(self.request.session['access_token'], self.request.session['access_token_secret'])
+        tweets = []
+        for home in tweepy.Paginator(
+            client.get_home_timeline,
+            exclude=['retweets', 'replies'],
+            tweet_fields=['created_at', 'author_id', 'public_metrics'],
+            expansions=['author_id', 'attachments.media_keys'],
+            user_fields=['name', 'username', 'profile_image_url', 'url'],
+            media_fields=['url'],
+            max_results=100,
+            start_time=datetime.datetime.now() - datetime.timedelta(days=1)
+        ):
+            try:
+                home = home.json()
+                for tweet in home['data']:
+                    for user in home['includes']['users']:
+                        if user['id'] == tweet['author_id']:
+                            tweet['name'] = user['name']
+                            tweet['profile_image_url'] = user['profile_image_url']
+                            tweets.append(tweet)
+            except Exception as e:
+                print(e)
+        tweets = sorted(tweets, key=lambda x: -x['public_metrics']['retweet_count'])
+        context['tweets'] = tweets
+
         return context
 
     def get(self, request, *args, **kwargs):
