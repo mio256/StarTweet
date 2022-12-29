@@ -29,6 +29,7 @@
                         <p>{{ tweet.name }} - {{ tweet.created_at }}</p>
                         <p>{{ tweet.text | linebreaksbr }}</p>
                         <p style="text-align: right;">RT:{{ tweet.public_metrics.retweet_count }} like:{{ tweet.public_metrics.like_count }}</p>
+                        <a class="btn btn-primary" style="text-align: right;" href="https://twitter.com/user/status/{{ tweet.id }}" target="_blank" rel="noopener noreferrer" role="button">view</a>
                         {% for media_url in tweet.media_url %}
                             <div class="tweet_media"><img src={{ media_url }}></div>
                         {% endfor %}
