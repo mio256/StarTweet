@@ -7,3 +7,7 @@
 .tweet_media img {
     height: 100%;
 }
+
+.menu_logo img {
+    border-radius:30px;
+}
