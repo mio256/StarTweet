@@ -101,6 +101,8 @@ def page_home(client: tweepy.Client, days: int):
         try:
             home = home.json()
             for tweet in home['data']:
+                tweet['created_at'] = datetime.datetime.fromisoformat(tweet['created_at'].split('.')[0]
+                    ).replace(tzinfo=datetime.timezone.utc).astimezone(datetime.timezone(datetime.timedelta(hours=9))).strftime('%Y-%m-%d %H:%M:%S')
                 if 'attachments' in tweet:
                     tweet['media_url'] = []
                     for media_key in tweet['attachments']['media_keys']:
@@ -133,6 +135,9 @@ def page_my_tweets(client: tweepy.Client, days: int):
         try:
             home = home.json()
             for tweet in home['data']:
+                tweet['created_at'] = datetime.datetime.fromisoformat(tweet['created_at'].split('.')[0]
+                    ).replace(tzinfo=datetime.timezone.utc).astimezone(datetime.timezone(datetime.timedelta(hours=9))).strftime('%Y-%m-%d %H:%M:%S')
+                print(tweet['created_at'])
                 if 'attachments' in tweet:
                     tweet['media_url'] = []
                     for media_key in tweet['attachments']['media_keys']:
