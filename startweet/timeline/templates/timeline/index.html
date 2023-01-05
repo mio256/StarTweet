@@ -25,7 +25,7 @@
                 {% for tweet in retweet_tweets %}
                 <div class="card m-2">
                     <div class="card-body" style="background-color: rgb(250, 250, 255);">
-                        <img src={{ tweet.profile_image_url }}>
+                        <img src={{ tweet.profile_image_url }}><br>
                         <a href="{% url 'timeline:user' tweet.author_id %}" class="card-link">{{ tweet.name }} - {{ tweet.created_at }}</a>
                         <p>{{ tweet.text | linebreaksbr }}</p>
                         <p style="text-align: right;">RT:{{ tweet.public_metrics.retweet_count }} like:{{ tweet.public_metrics.like_count }}</p>
@@ -59,10 +59,11 @@
                 {% for tweet in my_tweets %}
                 <div class="card m-2">
                     <div class="card-body" style="background-color: rgb(250, 250, 255);">
-                        <img src={{ tweet.profile_image_url }}>
-                        <p>{{ tweet.name }} - {{ tweet.created_at }}</p>
+                        <img src={{ tweet.profile_image_url }}><br>
+                        <a href="{% url 'timeline:user' tweet.author_id %}" class="card-link">{{ tweet.name }} - {{ tweet.created_at }}</a>
                         <p>{{ tweet.text | linebreaksbr }}</p>
                         <p style="text-align: right;">RT:{{ tweet.public_metrics.retweet_count }} like:{{ tweet.public_metrics.like_count }}</p>
+                        <a class="btn btn-primary" href="https://twitter.com/user/status/{{ tweet.id }}" target="_blank" rel="noopener noreferrer">view</a>
                         {% for media_url in tweet.media_url %}
                             <div class="tweet_media"><img src={{ media_url }}></div>
                         {% endfor %}
