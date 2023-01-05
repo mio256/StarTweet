@@ -15,7 +15,7 @@ class IndexView(TemplateView):
         context = super().get_context_data(**kwargs)
 
         client = create_client(self.request.session['access_token'], self.request.session['access_token_secret'])
-        context['retweet_tweets'] = sorted(page_home(client, days=1), key=lambda x: -(x['public_metrics']['retweet_count']*2+x['public_metrics']['like_count']))
+        context['home'] = sorted(page_home(client, days=1), key=lambda x: -(x['public_metrics']['retweet_count'] * 2 + x['public_metrics']['like_count']))
         context['my_tweets'] = page_my_tweets(client, days=7)
 
         return context
@@ -39,7 +39,7 @@ class UserView(TemplateView):
 
         client = create_client(self.request.session['access_token'], self.request.session['access_token_secret'])
         id = self.kwargs.get('id', '')
-        context['retweet_tweets'] = sorted(page_user(client, days=7,id=id), key=lambda x: -(x['public_metrics']['retweet_count']*2+x['public_metrics']['like_count']))
+        context['home'] = sorted(page_user(client, id, days=7), key=lambda x: -(x['public_metrics']['retweet_count'] * 2 + x['public_metrics']['like_count']))
         context['my_tweets'] = page_my_tweets(client, days=7)
 
         return context
@@ -99,6 +99,56 @@ def oauth(request):
     return redirect('timeline:index')
 
 
+def page_home(client: tweepy.Client, days: int):
+    tweets = []
+    for response in tweepy.Paginator(
+        client.get_home_timeline,
+        exclude=['retweets', 'replies'],
+        tweet_fields=['created_at', 'author_id', 'public_metrics'],
+        expansions=['author_id', 'attachments.media_keys'],
+        user_fields=['name', 'profile_image_url'],
+        media_fields=['url'],
+        max_results=100,
+        start_time=datetime.datetime.now() - datetime.timedelta(days=days)
+    ):
+        format_append_tweets(tweets, response)
+    return tweets
+
+
+def page_user(client: tweepy.Client, id: int, days: int):
+    tweets = []
+    for response in tweepy.Paginator(
+        client.get_users_tweets,
+        id=id,
+        exclude=['retweets', 'replies'],
+        tweet_fields=['created_at', 'author_id', 'public_metrics'],
+        expansions=['author_id', 'attachments.media_keys'],
+        user_fields=['name', 'profile_image_url'],
+        media_fields=['url'],
+        max_results=100,
+        start_time=datetime.datetime.now() - datetime.timedelta(days=days)
+    ):
+        format_append_tweets(tweets, response)
+    return tweets
+
+
+def page_my_tweets(client: tweepy.Client, days: int):
+    tweets = []
+    for response in tweepy.Paginator(
+        client.get_users_tweets,
+        id=client.get_me().json()['data']['id'],
+        exclude=['retweets', 'replies'],
+        tweet_fields=['created_at', 'author_id', 'public_metrics'],
+        expansions=['author_id', 'attachments.media_keys'],
+        user_fields=['name', 'profile_image_url'],
+        media_fields=['url'],
+        max_results=100,
+        start_time=datetime.datetime.now() - datetime.timedelta(days=days)
+    ):
+        format_append_tweets(tweets, response)
+    return tweets
+
+
 def create_client(access_token: str, access_token_secret: str):
     return tweepy.Client(
         os.environ['BEARER_TOKEN'],
@@ -110,107 +160,39 @@ def create_client(access_token: str, access_token_secret: str):
     )
 
 
-def page_home(client: tweepy.Client, days: int):
-    tweets = []
-    for home in tweepy.Paginator(
-        client.get_home_timeline,
-        exclude=['retweets', 'replies'],
-        tweet_fields=['created_at', 'author_id', 'public_metrics'],
-        expansions=['author_id', 'attachments.media_keys'],
-        user_fields=['name', 'profile_image_url'],
-        media_fields=['url'],
-        max_results=100,
-        start_time=datetime.datetime.now() - datetime.timedelta(days=days)
-    ):
-        try:
-            home = home.json()
-            for tweet in home['data']:
-                tweet['created_at'] = datetime.datetime.fromisoformat(tweet['created_at'].split('.')[0]
-                    ).replace(tzinfo=datetime.timezone.utc).astimezone(datetime.timezone(datetime.timedelta(hours=9))).strftime('%Y-%m-%d %H:%M:%S')
-                if 'attachments' in tweet:
-                    tweet['media_url'] = []
-                    for media_key in tweet['attachments']['media_keys']:
-                        for media in home['includes']['media']:
-                            if media_key == media['media_key'] and 'url' in media:
-                                tweet['media_url'].append(media['url'])
-                for user in home['includes']['users']:
-                    if user['id'] == tweet['author_id']:
-                        tweet['name'] = user['name']
-                        tweet['profile_image_url'] = user['profile_image_url']
-                        tweets.append(tweet)
-        except KeyError as e:
-            print(e)
-    return tweets
-
-
-def page_user(client: tweepy.Client, days: int, id: int):
-    tweets = []
-    for home in tweepy.Paginator(
-        client.get_users_tweets,
-        id=id,
-        exclude=['retweets', 'replies'],
-        tweet_fields=['created_at', 'author_id', 'public_metrics'],
-        expansions=['author_id', 'attachments.media_keys'],
-        user_fields=['name', 'profile_image_url'],
-        media_fields=['url'],
-        max_results=100,
-        start_time=datetime.datetime.now() - datetime.timedelta(days=days)
-    ):
-        try:
-            home = home.json()
-            for tweet in home['data']:
-                tweet['created_at'] = datetime.datetime.fromisoformat(tweet['created_at'].split('.')[0]
-                    ).replace(tzinfo=datetime.timezone.utc).astimezone(datetime.timezone(datetime.timedelta(hours=9))).strftime('%Y-%m-%d %H:%M:%S')
-                if 'attachments' in tweet:
-                    tweet['media_url'] = []
-                    for media_key in tweet['attachments']['media_keys']:
-                        for media in home['includes']['media']:
-                            if media_key == media['media_key'] and 'url' in media:
-                                tweet['media_url'].append(media['url'])
-                for user in home['includes']['users']:
-                    if user['id'] == tweet['author_id']:
-                        tweet['name'] = user['name']
-                        tweet['profile_image_url'] = user['profile_image_url']
-                        tweets.append(tweet)
-        except KeyError as e:
-            print(e)
-    return tweets
-
-
-def page_my_tweets(client: tweepy.Client, days: int):
-    tweets = []
-    for home in tweepy.Paginator(
-        client.get_users_tweets,
-        id=client.get_me().json()['data']['id'],
-        exclude=['retweets', 'replies'],
-        tweet_fields=['created_at', 'author_id', 'public_metrics'],
-        expansions=['author_id', 'attachments.media_keys'],
-        user_fields=['name', 'profile_image_url'],
-        media_fields=['url'],
-        max_results=100,
-        start_time=datetime.datetime.now() - datetime.timedelta(days=days)
-    ):
-        try:
-            home = home.json()
-            for tweet in home['data']:
-                tweet['created_at'] = datetime.datetime.fromisoformat(tweet['created_at'].split('.')[0]
-                    ).replace(tzinfo=datetime.timezone.utc).astimezone(datetime.timezone(datetime.timedelta(hours=9))).strftime('%Y-%m-%d %H:%M:%S')
-                if 'attachments' in tweet:
-                    tweet['media_url'] = []
-                    for media_key in tweet['attachments']['media_keys']:
-                        for media in home['includes']['media']:
-                            if media_key == media['media_key'] and 'url' in media:
-                                tweet['media_url'].append(media['url'])
-                for user in home['includes']['users']:
-                    if user['id'] == tweet['author_id']:
-                        tweet['name'] = user['name']
-                        tweet['profile_image_url'] = user['profile_image_url']
-                        tweets.append(tweet)
-        except KeyError as e:
-            print(e)
-    return tweets
-
-
 def username_to_id(client: tweepy.Client, username: str):
     response = client.get_user(username=username)
     return response.json()['data']['id']
+
+
+def format_tweet_data(tweet_data: str):
+    iso_data = datetime.datetime.fromisoformat(tweet_data.split('.')[0])
+    utc_data = iso_data.replace(tzinfo=datetime.timezone.utc)
+    jst_data = utc_data.astimezone(datetime.timezone(datetime.timedelta(hours=9)))
+    return jst_data.strftime('%Y-%m-%d %H:%M:%S')
+
+
+def format_append_tweets(tweets: list, response: requests.Response):
+    response = response.json()
+    if 'data' in response:
+        for tweet in response['data']:
+            tweet['created_at'] = format_tweet_data(tweet['created_at'])
+            if 'attachments' in tweet:
+                append_media_tweet(tweet, response['includes']['media'])
+            append_profile_tweet(tweet, response['includes']['users'])
+            tweets.append(tweet)
+
+
+def append_media_tweet(tweet: dict, media_dict: dict):
+    tweet['media_url'] = []
+    for media_key in tweet['attachments']['media_keys']:
+        for media in media_dict:
+            if media_key == media['media_key'] and 'url' in media:
+                tweet['media_url'].append(media['url'])
+
+
+def append_profile_tweet(tweet: dict, users: dict):
+    for user in users:
+        if user['id'] == tweet['author_id']:
+            tweet['name'] = user['name']
+            tweet['profile_image_url'] = user['profile_image_url']
