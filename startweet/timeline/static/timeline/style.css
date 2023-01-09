@@ -1,13 +1,12 @@
 .tweet_media {
     display: inline-block;
     height: 100px;
+    width: 100px;
+    object-fit: cover; /* この一行を追加するだけ！ */
     margin-right: 15px;
     margin-bottom: 15px;
 }
 .tweet_media img {
     height: 100%;
-}
-
-.menu_logo img {
-    border-radius:30px;
+    width: 100%;
 }

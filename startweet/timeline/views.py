@@ -15,8 +15,8 @@ class IndexView(TemplateView):
         context = super().get_context_data(**kwargs)
 
         client = create_client(self.request.session['access_token'], self.request.session['access_token_secret'])
-        context['home'] = sorted(page_home(client, days=1), key=lambda x: -(x['public_metrics']['retweet_count'] * 2 + x['public_metrics']['like_count']))
-        context['my_tweets'] = page_my_tweets(client, days=7)
+        tweets = page_home(client, days=3)
+        context['tweets'] = sorted(tweets, key=lambda x: -(x['public_metrics']['retweet_count'] * 2 + x['public_metrics']['like_count']))
 
         return context
 
@@ -34,8 +34,8 @@ class UserView(TemplateView):
 
         client = create_client(self.request.session['access_token'], self.request.session['access_token_secret'])
         id = self.kwargs.get('id', '')
-        context['home'] = sorted(page_user(client, id, days=7), key=lambda x: -(x['public_metrics']['retweet_count'] * 2 + x['public_metrics']['like_count']))
-        context['my_tweets'] = page_my_tweets(client, days=7)
+        tweets = page_user(client, id, days=7)
+        context['tweets'] = sorted(tweets, key=lambda x: -(x['public_metrics']['retweet_count'] * 2 + x['public_metrics']['like_count']))
 
         return context
 
@@ -122,23 +122,6 @@ def page_user(client: tweepy.Client, id: int, days: int):
     return tweets
 
 
-def page_my_tweets(client: tweepy.Client, days: int):
-    tweets = []
-    for response in tweepy.Paginator(
-        client.get_users_tweets,
-        id=client.get_me().json()['data']['id'],
-        exclude=['retweets', 'replies'],
-        tweet_fields=['created_at', 'author_id', 'public_metrics'],
-        expansions=['author_id', 'attachments.media_keys'],
-        user_fields=['name', 'profile_image_url'],
-        media_fields=['url'],
-        max_results=100,
-        start_time=datetime.datetime.now() - datetime.timedelta(days=days)
-    ):
-        format_append_tweets(tweets, response)
-    return tweets
-
-
 def create_client(access_token: str, access_token_secret: str):
     return tweepy.Client(
         os.environ['BEARER_TOKEN'],
@@ -166,6 +149,9 @@ def format_append_tweets(tweets: list, response: requests.Response):
     response = response.json()
     if 'data' in response:
         for tweet in response['data']:
+            public_metrics = tweet['public_metrics']
+            public_metrics['reaction_count'] = public_metrics['retweet_count'] + public_metrics['like_count'] + public_metrics['quote_count'] + public_metrics['reply_count']
+            tweet['public_metrics']['virtual_engagement'] = round(public_metrics['reaction_count'] / public_metrics['impression_count'] * 100, 2)
             tweet['created_at'] = format_tweet_data(tweet['created_at'])
             if 'attachments' in tweet:
                 append_media_tweet(tweet, response['includes']['media'])
