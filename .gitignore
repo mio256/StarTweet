@@ -10,3 +10,6 @@ startweet/static/
 
 # test
 test/
+
+# pythonanywhere
+/.env

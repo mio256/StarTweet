@@ -1,3 +1,4 @@
 django
 tweepy
 requests_oauthlib
+python-dotenv
