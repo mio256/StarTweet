@@ -25,11 +25,6 @@ class IndexView(TemplateView):
             return redirect('timeline:login')
         return super().get(request, *args, **kwargs)
 
-    def post(self, request, *args, **kwargs):
-        content = request.POST['content']
-        create_client(request.session['access_token'], request.session['access_token_secret']).create_tweet(text=content)
-        return super().get(request, *args, **kwargs)
-
 
 class UserView(TemplateView):
     template_name = 'timeline/index.html'
@@ -47,11 +42,6 @@ class UserView(TemplateView):
     def get(self, request, *args, **kwargs):
         if not ('access_token' and 'access_token_secret') in request.session:
             return redirect('timeline:login')
-        return super().get(request, *args, **kwargs)
-
-    def post(self, request, *args, **kwargs):
-        content = request.POST['content']
-        create_client(request.session['access_token'], request.session['access_token_secret']).create_tweet(text=content)
         return super().get(request, *args, **kwargs)
 
 
