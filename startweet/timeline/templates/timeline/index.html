@@ -31,9 +31,8 @@
                         <a href="{% url 'timeline:user' tweet.author_id %}" class="card-link">{{ tweet.name }} - {{ tweet.created_at }}</a>
                         <p>{{ tweet.text | linebreaksbr }}</p>
                         <p style="text-align: right;">
-                            ✨:{{ tweet.public_metrics.virtual_engagement }} 
+                            ✨:{{ tweet.public_metrics.virtual_engagement }}% 
                             👀:{{ tweet.public_metrics.impression_count }} 
-                            ✅:{{ tweet.public_metrics.reaction_count }} 
                             🔁:{{ tweet.public_metrics.retweet_count }} 
                             ❤️:{{ tweet.public_metrics.like_count }}
                         </p>
