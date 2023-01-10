@@ -18,6 +18,8 @@ class IndexView(TemplateView):
         tweets = page_home(client, days=3)
         context['tweets'] = sorted(tweets, key=lambda x: -(x['public_metrics']['retweet_count'] * 2 + x['public_metrics']['like_count']))
 
+        context['me'] = client.get_me().json()['data']['id']
+
         return context
 
     def get(self, request, *args, **kwargs):
@@ -37,6 +39,8 @@ class UserView(TemplateView):
         tweets = page_user(client, id, days=7)
         context['tweets'] = sorted(tweets, key=lambda x: -(x['public_metrics']['retweet_count'] * 2 + x['public_metrics']['like_count']))
 
+        context['me'] = client.get_me().json()['data']['id']
+        
         return context
 
     def get(self, request, *args, **kwargs):
@@ -151,7 +155,7 @@ def format_append_tweets(tweets: list, response: requests.Response):
         for tweet in response['data']:
             public_metrics = tweet['public_metrics']
             public_metrics['reaction_count'] = public_metrics['retweet_count'] + public_metrics['like_count'] + public_metrics['quote_count'] + public_metrics['reply_count']
-            tweet['public_metrics']['virtual_engagement'] = round(public_metrics['reaction_count'] / public_metrics['impression_count'] * 100, 2)
+            tweet['public_metrics']['virtual_engagement'] = round(public_metrics['reaction_count'] / (public_metrics['impression_count'] + 1) * 100, 2)
             tweet['created_at'] = format_tweet_data(tweet['created_at'])
             if 'attachments' in tweet:
                 append_media_tweet(tweet, response['includes']['media'])
