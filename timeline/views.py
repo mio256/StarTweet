@@ -53,7 +53,8 @@ def login(request):
     API_KEY = os.environ['CONSUMER_KEY']
     API_KEY_SECRET = os.environ['CONSUMER_SECRET']
 
-    callback_url = "http://localhost:8000/timeline/oauth/"
+    # callback_url = "http://localhost:8000/timeline/oauth/"
+    callback_url = "https://mi0256.pythonanywhere.com/timeline/oauth/"
     request_endpoint_url = "https://api.twitter.com/oauth/request_token"
     authenticate_url = "https://api.twitter.com/oauth/authenticate"
 
