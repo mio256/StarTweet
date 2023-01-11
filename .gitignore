@@ -6,7 +6,7 @@ __pycache__
 migrations
 __init__.py
 *.sqlite3
-startweet/static/
+/static/
 
 # test
 test/

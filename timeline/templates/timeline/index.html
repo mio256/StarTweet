@@ -23,6 +23,9 @@
         <div class="row justify-content-md-center">
             <div class="col col-lg-7">
                 <div class="card m-2"><a class="btn btn-primary" href="{% url 'timeline:index' %}" role="button">timeline</a></div>
+                {% for list in lists %}
+                <div class="card m-2"><a class="btn btn-primary" href="{% url 'timeline:list' list.id %}" role="button">{{ list.name }}</a></div>
+                {% endfor %}
                 <div class="card m-2"><a class="btn btn-primary" href="{% url 'timeline:user' me %}" role="button">me</a></div>
                 {% for tweet in tweets %}
                 <div class="card m-2">

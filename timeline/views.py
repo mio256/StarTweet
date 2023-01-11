@@ -15,10 +15,11 @@ class IndexView(TemplateView):
         context = super().get_context_data(**kwargs)
 
         client = create_client(self.request.session['access_token'], self.request.session['access_token_secret'])
+        context['lists'] = client.get_pinned_lists().json()['data']
+        context['me'] = client.get_me().json()['data']['id']
+
         tweets = page_home(client, days=3)
         context['tweets'] = sorted(tweets, key=lambda x: -(x['public_metrics']['retweet_count'] * 2 + x['public_metrics']['like_count']))
-
-        context['me'] = client.get_me().json()['data']['id']
 
         return context
 
@@ -35,12 +36,35 @@ class UserView(TemplateView):
         context = super().get_context_data(**kwargs)
 
         client = create_client(self.request.session['access_token'], self.request.session['access_token_secret'])
+        context['lists'] = client.get_pinned_lists().json()['data']
+        context['me'] = client.get_me().json()['data']['id']
+
         id = self.kwargs.get('id', '')
         tweets = page_user(client, id, days=7)
         context['tweets'] = sorted(tweets, key=lambda x: -(x['public_metrics']['retweet_count'] * 2 + x['public_metrics']['like_count']))
 
+        return context
+
+    def get(self, request, *args, **kwargs):
+        if not ('access_token' and 'access_token_secret') in request.session:
+            return redirect('timeline:login')
+        return super().get(request, *args, **kwargs)
+
+
+class ListView(TemplateView):
+    template_name = 'timeline/index.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        client = create_client(self.request.session['access_token'], self.request.session['access_token_secret'])
+        context['lists'] = client.get_pinned_lists().json()['data']
         context['me'] = client.get_me().json()['data']['id']
-        
+
+        id = self.kwargs.get('id', '')
+        tweets = page_list(client, id, days=7)
+        context['tweets'] = sorted(tweets, key=lambda x: -(x['public_metrics']['retweet_count'] * 2 + x['public_metrics']['like_count']))
+
         return context
 
     def get(self, request, *args, **kwargs):
@@ -122,6 +146,21 @@ def page_user(client: tweepy.Client, id: int, days: int):
         media_fields=['url'],
         max_results=100,
         start_time=datetime.datetime.now() - datetime.timedelta(days=days)
+    ):
+        format_append_tweets(tweets, response)
+    return tweets
+
+
+def page_list(client: tweepy.Client, id: int, days: int):
+    tweets = []
+    for response in tweepy.Paginator(
+        client.get_list_tweets,
+        id=id,
+        tweet_fields=['created_at', 'author_id', 'public_metrics'],
+        expansions=['author_id', 'attachments.media_keys'],
+        user_fields=['name', 'profile_image_url'],
+        media_fields=['url'],
+        max_results=100
     ):
         format_append_tweets(tweets, response)
     return tweets
