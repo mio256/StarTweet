@@ -15,7 +15,7 @@ class IndexView(TemplateView):
         context = super().get_context_data(**kwargs)
 
         client = create_client(self.request.session['access_token'], self.request.session['access_token_secret'])
-        context['lists'] = client.get_pinned_lists().json()['data']
+        context['lists'] = get_pinned_lists(client)
         context['me'] = client.get_me().json()['data']['id']
 
         tweets = page_home(client, days=3)
@@ -36,7 +36,7 @@ class UserView(TemplateView):
         context = super().get_context_data(**kwargs)
 
         client = create_client(self.request.session['access_token'], self.request.session['access_token_secret'])
-        context['lists'] = client.get_pinned_lists().json()['data']
+        context['lists'] = get_pinned_lists(client)
         context['me'] = client.get_me().json()['data']['id']
 
         id = self.kwargs.get('id', '')
@@ -58,7 +58,7 @@ class ListView(TemplateView):
         context = super().get_context_data(**kwargs)
 
         client = create_client(self.request.session['access_token'], self.request.session['access_token_secret'])
-        context['lists'] = client.get_pinned_lists().json()['data']
+        context['lists'] = get_pinned_lists(client)
         context['me'] = client.get_me().json()['data']['id']
 
         id = self.kwargs.get('id', '')
@@ -180,6 +180,13 @@ def create_client(access_token: str, access_token_secret: str):
 def username_to_id(client: tweepy.Client, username: str):
     response = client.get_user(username=username)
     return response.json()['data']['id']
+
+
+def get_pinned_lists(client: tweepy.Client):
+    try:
+        return client.get_pinned_lists().json()['data']
+    except Exception: 
+        return []
 
 
 def format_tweet_data(tweet_data: str):
