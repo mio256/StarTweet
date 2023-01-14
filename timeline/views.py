@@ -8,9 +8,22 @@ from django.shortcuts import redirect
 from django.views.generic import TemplateView
 
 
-class IndexView(TemplateView):
+class TimelineViewBase(TemplateView):
     template_name = 'timeline/index.html'
 
+    def get(self, request, *args, **kwargs):
+        if not ('access_token' and 'access_token_secret') in request.session:
+            return redirect('timeline:login')
+        return super().get(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        search_username = request.POST['search_username']
+        client = create_client(self.request.session['access_token'], self.request.session['access_token_secret'])
+        id = client.get_user(username=str(search_username)).json()['data']['id']
+        return redirect('timeline:user', id)
+
+
+class IndexView(TimelineViewBase):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
@@ -23,15 +36,8 @@ class IndexView(TemplateView):
 
         return context
 
-    def get(self, request, *args, **kwargs):
-        if not ('access_token' and 'access_token_secret') in request.session:
-            return redirect('timeline:login')
-        return super().get(request, *args, **kwargs)
 
-
-class UserView(TemplateView):
-    template_name = 'timeline/index.html'
-
+class UserView(TimelineViewBase):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
@@ -45,15 +51,8 @@ class UserView(TemplateView):
 
         return context
 
-    def get(self, request, *args, **kwargs):
-        if not ('access_token' and 'access_token_secret') in request.session:
-            return redirect('timeline:login')
-        return super().get(request, *args, **kwargs)
 
-
-class ListView(TemplateView):
-    template_name = 'timeline/index.html'
-
+class ListView(TimelineViewBase):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
@@ -66,11 +65,6 @@ class ListView(TemplateView):
         context['tweets'] = sorted(tweets, key=lambda x: -(x['public_metrics']['retweet_count'] * 2 + x['public_metrics']['like_count']))
 
         return context
-
-    def get(self, request, *args, **kwargs):
-        if not ('access_token' and 'access_token_secret') in request.session:
-            return redirect('timeline:login')
-        return super().get(request, *args, **kwargs)
 
 
 def login(request):
@@ -185,7 +179,7 @@ def username_to_id(client: tweepy.Client, username: str):
 def get_pinned_lists(client: tweepy.Client):
     try:
         return client.get_pinned_lists().json()['data']
-    except Exception: 
+    except Exception:
         return []
 
 
