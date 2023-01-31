@@ -30,14 +30,56 @@
                 <form method="POST">
                     {% csrf_token %}
                     <div class="row m-2 g-2 align-items-center">
-                        <div class="col-auto">
-                            <label class="form-label">Username</label>
+                        <div class="col-3">
+                            <label class="form-label">search user tweets</label>
                         </div>
                         <div class="col-auto">
                             <input class="form-control" type="text" placeholder="mi0256" name="search_username">
                         </div>
                         <div class="col-auto">
-                            <button type="submit" class="btn btn-primary">Search</button>
+                            <button type="submit" class="btn btn-outline-primary">Search</button>
+                        </div>
+                    </div>
+                </form>
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="row m-2 g-2 align-items-center">
+                        <div class="col-3">
+                            <label class="form-label">like user tweets</label>
+                        </div>
+                        <div class="col-auto">
+                            <input class="form-control" type="text" placeholder="mi0256" name="like_username">
+                        </div>
+                        <div class="col-auto">
+                            <button type="submit" class="btn btn-outline-warning">Like</button>
+                        </div>
+                    </div>
+                </form>
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="row m-2 g-2 align-items-center">
+                        <div class="col-3">
+                            <label class="form-label">rt user tweets</label>
+                        </div>
+                        <div class="col-auto">
+                            <input class="form-control" type="text" placeholder="mi0256" name="rt_username">
+                        </div>
+                        <div class="col-auto">
+                            <button type="submit" class="btn btn-outline-success">RT</button>
+                        </div>
+                    </div>
+                </form>
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="row m-2 g-2 align-items-center">
+                        <div class="col-3">
+                            <label class="form-label">like home</label>
+                        </div>
+                        <div class="col-auto">
+                            <input class="form-control" type="text" placeholder="20" name="like_home_limit">
+                        </div>
+                        <div class="col-auto">
+                            <button type="submit" class="btn btn-outline-danger">Like</button>
                         </div>
                     </div>
                 </form>
